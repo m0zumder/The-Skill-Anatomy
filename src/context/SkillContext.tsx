@@ -7,7 +7,7 @@ type SkillState = Record<string, string[]>;
 interface SkillContextType {
   selectedSkills: SkillState;
   toggleSkill: (region: string, skill: string) => void;
-  getRegionCompletionData: (region: string) => { current: number; total: number; color: string };
+  getRegionCompletionData: (region: string) => { current: number; total: number; color: string; opacity: number };
   activeModal: string | null;
   openModal: (region: string) => void;
   closeModal: () => void;
@@ -33,20 +33,24 @@ export function SkillProvider({ children }: { children: ReactNode }) {
 
   const getRegionCompletionData = (region: string) => {
     const data = skillsData[region];
-    if (!data) return { current: 0, total: 1, color: "#d1d5db" };
+    // Default state: 15% visible
+    if (!data) return { current: 0, total: 1, color: "#8DB238", opacity: 0.15 };
 
     const totalSkills = Object.values(data.sectors).flat().length;
     const currentSkills = selectedSkills[region]?.length || 0;
     
-    // Exact colors from humen anatomy shadow_2.jpg
-    let color = "#cbd5b5"; // Empty (হালকা সবুজ, ব্যাকগ্রাউন্ডের সাথে মানানসই)
-    if (currentSkills > 0) color = "#a9c46c"; // Learning (মাঝারি সবুজ)
-    if (currentSkills >= totalSkills * 0.5) color = "#8DB238"; // Proficient (আপনার ছবির হুবহু রঙ)
-    if (currentSkills === totalSkills) color = "#7a9c2e"; // Mastered (একটু গাঢ় সবুজ)
+    // Apnar deya chobir exact base olive green color
+    const color = "#8DB238"; 
 
-    return { current: currentSkills, total: totalSkills, color };
+    // Dynamic Opacity: 0 skill e 15% opacity, full skill e 100% (1.0) opacity
+    let opacity = 0.15;
+    if (currentSkills > 0) {
+      opacity = 0.15 + (0.85 * (currentSkills / totalSkills));
+    }
+
+    return { current: currentSkills, total: totalSkills, color, opacity };
   };
-  
+
   return (
     <SkillContext.Provider value={{ 
       selectedSkills, 
